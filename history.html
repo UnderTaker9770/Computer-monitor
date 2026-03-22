@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>สรุปเวลาการใช้งานรายวัน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold text-slate-800 mb-8 text-center">📊 สรุปรายงานการใช้งานคอมพิวเตอร์</h1>
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm mb-6 flex flex-wrap items-center justify-center gap-4">
+            <label class="font-bold text-gray-700">เลือกวันที่ต้องการตรวจสอบ:</label>
+            <input type="date" id="datePicker" class="border-2 border-blue-100 p-2 rounded-xl focus:border-blue-500 outline-none">
+            <button onclick="loadHistory()" class="bg-blue-600 text-white px-8 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+                ดึงข้อมูลประวัติ
+            </button>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-800 text-white">
+                    <tr>
+                        <th class="p-4">ชื่อเครื่อง</th>
+                        <th class="p-4">เริ่มใช้งาน (Start)</th>
+                        <th class="p-4">ใช้งานล่าสุด (End)</th>
+                        <th class="p-4">รวมเวลาใช้งาน</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-100">
+                    </tbody>
+            </table>
+            <div id="noData" class="p-10 text-center text-gray-400 hidden">ไม่พบข้อมูลในวันที่เลือก</div>
+        </div>
+    </div>
+
+    <script>
+        // *** URL Firebase ของคุณ ***
+        const BASE_URL = "https://my-computer-lab-b389b-default-rtdb.asia-southeast1.firebasedatabase.app/history/";
+
+        async function loadHistory() {
+            const date = document.getElementById('datePicker').value;
+            if (!date) return alert("กรุณาเลือกวันที่ก่อนครับ");
+
+            const tableBody = document.getElementById('tableBody');
+            const noData = document.getElementById('noData');
+            tableBody.innerHTML = '';
+            noData.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${BASE_URL}${date}.json`);
+                const data = await response.json();
+
+                if (!data) {
+                    noData.classList.remove('hidden');
+                    return;
+                }
+
+                for (let pc in data) {
+                    const logs = Object.values(data[pc]);
+                    const startTime = logs[0].time;
+                    const endTime = logs[logs.length - 1].time;
+
+                    // คำนวณระยะเวลา (จำนวนครั้งที่ส่งข้อมูล x 1 นาที)
+                    const totalMinutes = logs.length;
+                    const hours = Math.floor(totalMinutes / 60);
+                    const mins = totalMinutes % 60;
+                    const durationText = `${hours > 0 ? hours + ' ชม. ' : ''}${mins} นาที`;
+
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="p-4 font-bold text-slate-700">${pc}</td>
+                            <td class="p-4 text-emerald-600 font-medium">${startTime} น.</td>
+                            <td class="p-4 text-rose-500 font-medium">${endTime} น.</td>
+                            <td class="p-4">
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold">
+                                    ${durationText}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (e) {
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
+            }
+        }
+
+        // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
+        document.getElementById('datePicker').valueAsDate = new Date();
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ระบบเช็คเวลาคอมพิวเตอร์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white p-10">
+    <h1 class="text-3xl font-bold mb-10 text-center">💻 สถานะห้องคอมพิวเตอร์ Real-time</h1>
+    <div id="pc-container" class="grid grid-cols-2 md:grid-cols-5 gap-6">
+        </div>
+
+    <script>
+        // *** แก้ไขตรงนี้: ใส่ URL ของคุณที่ลงท้ายด้วย /computers.json ***
+        const FB_URL = "https://my-computer-lab-b389b-default-rtdb.asia-southeast1.firebasedatabase.app/computers.json";
+
+        async function updateDashboard() {
+            try {
+                const response = await fetch(FB_URL);
+                const data = await response.json();
+                const container = document.getElementById('pc-container');
+                container.innerHTML = '';
+
+                const now = Math.floor(Date.now() / 1000);
+
+                for (let pc in data) {
+                    // เช็คว่าสัญญาณหายไปเกิน 3 นาที (180 วินาที) หรือไม่
+                    const lastSeen = data[pc].last_seen;
+                    const isOnline = (now - lastSeen) < 70;
+                    const bgColor = isOnline ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-slate-700 opacity-50';
+                    
+                    // คำนวณเวลาที่ผ่านไป (แบบง่าย)
+                    const lastSeenTime = new Date(lastSeen * 1000).toLocaleTimeString('th-TH');
+
+                    container.innerHTML += `
+                        <div class="${bgColor} p-6 rounded-2xl shadow-lg text-center transform transition-all duration-500 hover:scale-105">
+                            <div class="text-2xl font-black">${pc}</div>
+                            <div class="text-sm font-bold mt-2">${isOnline ? '● ONLINE' : '○ OFFLINE'}</div>
+                            <div class="text-xs mt-3 opacity-80">อัปเดตล่าสุด: ${lastSeenTime}</div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error("Error fetching data:", e);
+            }
+        }
+
+        setInterval(updateDashboard, 5000); // อัปเดตทุก 5 วินาที
+        updateDashboard();
+    </script>
+</body>
+</html>
