@@ -2,91 +2,89 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>สรุปเวลาการใช้งานรายวัน</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติการใช้งานคอมพิวเตอร์</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-3xl font-bold text-slate-800 mb-8 text-center">📊 สรุปรายงานการใช้งานคอมพิวเตอร์</h1>
-        
-        <div class="bg-white p-6 rounded-2xl shadow-sm mb-6 flex flex-wrap items-center justify-center gap-4">
-            <label class="font-bold text-gray-700">เลือกวันที่ต้องการตรวจสอบ:</label>
-            <input type="date" id="datePicker" class="border-2 border-blue-100 p-2 rounded-xl focus:border-blue-500 outline-none">
-            <button onclick="loadHistory()" class="bg-blue-600 text-white px-8 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
-                ดึงข้อมูลประวัติ
-            </button>
+<body class="bg-slate-900 text-white p-5 md:p-10">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold italic text-blue-400">📊 USAGE HISTORY</h1>
+            <a href="index.html" class="text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition">🏠 กลับหน้าหลัก</a>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
             <table class="w-full text-left">
-                <thead class="bg-slate-800 text-white">
+                <thead class="bg-slate-700 text-slate-300 uppercase text-xs">
                     <tr>
                         <th class="p-4">ชื่อเครื่อง</th>
-                        <th class="p-4">เริ่มใช้งาน (Start)</th>
-                        <th class="p-4">ใช้งานล่าสุด (End)</th>
-                        <th class="p-4">รวมเวลาใช้งาน</th>
+                        <th class="p-4">สถานะล่าสุด</th>
+                        <th class="p-4">เวลาที่ตรวจพบ</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody" class="divide-y divide-gray-100">
-                    </tbody>
+                <tbody id="history-table" class="divide-y divide-slate-700">
+                    <tr>
+                        <td colspan="3" class="p-10 text-center text-slate-500 italic">กำลังโหลดประวัติการใช้งาน...</td>
+                    </tr>
+                </tbody>
             </table>
-            <div id="noData" class="p-10 text-center text-gray-400 hidden">ไม่พบข้อมูลในวันที่เลือก</div>
         </div>
     </div>
 
     <script>
-        // *** URL Firebase ของคุณ ***
-        const BASE_URL = "https://my-computer-lab-b389b-default-rtdb.asia-southeast1.firebasedatabase.app/history/";
+        // URL ฐานข้อมูลล่าสุดของคุณ
+        const FB_URL = "https://my-computer-lap-default-rtdb.asia-southeast1.firebasedatabase.app/computers.json";
 
         async function loadHistory() {
-            const date = document.getElementById('datePicker').value;
-            if (!date) return alert("กรุณาเลือกวันที่ก่อนครับ");
-
-            const tableBody = document.getElementById('tableBody');
-            const noData = document.getElementById('noData');
-            tableBody.innerHTML = '';
-            noData.classList.add('hidden');
-
             try {
-                const response = await fetch(`${BASE_URL}${date}.json`);
+                const response = await fetch(FB_URL);
                 const data = await response.json();
-
+                const tableBody = document.getElementById('history-table');
+                
                 if (!data) {
-                    noData.classList.remove('hidden');
+                    tableBody.innerHTML = '<tr><td colspan="3" class="p-10 text-center opacity-50">ไม่พบประวัติข้อมูล</td></tr>';
                     return;
                 }
 
-                for (let pc in data) {
-                    const logs = Object.values(data[pc]);
-                    const startTime = logs[0].time;
-                    const endTime = logs[logs.length - 1].time;
+                tableBody.innerHTML = ''; // ล้างข้อมูลเก่า
+                
+                // แปลงข้อมูลจาก Object เป็น Array เพื่อเรียงลำดับ
+                const records = Object.keys(data).map(key => ({
+                    name: key,
+                    ...data[key]
+                }));
 
-                    // คำนวณระยะเวลา (จำนวนครั้งที่ส่งข้อมูล x 1 นาที)
-                    const totalMinutes = logs.length;
-                    const hours = Math.floor(totalMinutes / 60);
-                    const mins = totalMinutes % 60;
-                    const durationText = `${hours > 0 ? hours + ' ชม. ' : ''}${mins} นาที`;
+                // เรียงตามเวลาล่าสุดขึ้นก่อน
+                records.sort((a, b) => b.last_seen - a.last_seen);
 
-                    tableBody.innerHTML += `
-                        <tr class="hover:bg-blue-50 transition-colors">
-                            <td class="p-4 font-bold text-slate-700">${pc}</td>
-                            <td class="p-4 text-emerald-600 font-medium">${startTime} น.</td>
-                            <td class="p-4 text-rose-500 font-medium">${endTime} น.</td>
+                records.forEach(record => {
+                    const date = new Date(record.last_seen);
+                    const timeString = date.toLocaleDateString('th-TH') + ' ' + date.toLocaleTimeString('th-TH');
+                    
+                    const row = `
+                        <tr class="hover:bg-slate-700/50 transition">
+                            <td class="p-4 font-bold text-blue-300">${record.name}</td>
                             <td class="p-4">
-                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold">
-                                    ${durationText}
+                                <span class="px-2 py-1 rounded text-[10px] bg-green-500/20 text-green-400 border border-green-500/50">
+                                    ACTIVE
                                 </span>
                             </td>
+                            <td class="p-4 text-slate-400 text-sm">${timeString}</td>
                         </tr>
                     `;
-                }
-            } catch (e) {
-                alert("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
+                    tableBody.innerHTML += row;
+                });
+
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('history-table').innerHTML = '<tr><td colspan="3" class="p-10 text-center text-red-400">เชื่อมต่อฐานข้อมูลล้มเหลว</td></tr>';
             }
         }
 
-        // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
-        document.getElementById('datePicker').valueAsDate = new Date();
+        // โหลดข้อมูลทันทีเมื่อเปิดหน้า
+        loadHistory();
+        // อัปเดตทุก 30 วินาที
+        setInterval(loadHistory, 30000);
     </script>
 </body>
 </html>
