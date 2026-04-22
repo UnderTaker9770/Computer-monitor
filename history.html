@@ -138,6 +138,7 @@
 
     <script>
         const BASE_URL = "https://my-computer-lap-default-rtdb.asia-southeast1.firebasedatabase.app/history";
+        let historyInterval = null;
 
         // ตั้งค่าให้ปฏิทินเป็นวันปัจจุบันโดยอัตโนมัติ และดึงข้อมูลทันที
         window.addEventListener('DOMContentLoaded', () => {
@@ -145,25 +146,39 @@
             const today = new Date();
             const localDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
             document.getElementById('date-picker').value = localDate;
-            loadHistoryByDate();
+            
+            // โหลดครั้งแรก โชว์ Spinner
+            loadHistoryByDate(true);
+            
+            // ดึงข้อมูล Real-time ทุก 3 วินาที
+            historyInterval = setInterval(() => {
+                loadHistoryByDate(false);
+            }, 3000);
         });
 
-        async function loadHistoryByDate() {
+        // เมื่อผู้ใช้เปลี่ยนวันที่ในปฏิทินด้วยตัวเอง
+        document.getElementById('date-picker').addEventListener('change', () => {
+            loadHistoryByDate(true); // โชว์ Spinner เมื่อสลับวัน
+        });
+
+        async function loadHistoryByDate(showSpinner = false) {
             const selectedDate = document.getElementById('date-picker').value;
             const table = document.getElementById('history-table');
 
             if (!selectedDate) return;
 
-            table.innerHTML = `
-                <tr>
-                    <td colspan="5" class="p-16 text-center">
-                        <div class="flex flex-col items-center justify-center text-indigo-300">
-                            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-400 mb-4"></div>
-                            <span class="text-sm font-medium tracking-wide">กำลังโหลดข้อมูล...</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            if (showSpinner) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-16 text-center">
+                            <div class="flex flex-col items-center justify-center text-indigo-300">
+                                <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-400 mb-4"></div>
+                                <span class="text-sm font-medium tracking-wide">กำลังโหลดข้อมูล...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
 
             try {
                 const response = await fetch(`${BASE_URL}/${selectedDate}.json`);
@@ -183,7 +198,7 @@
                     return;
                 }
 
-                table.innerHTML = '';
+                let newHTML = '';
                 for (let pc in data) {
                     const lastSeenTime = new Date(data[pc].last_seen).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
@@ -194,7 +209,7 @@
 
                     let usageHours = data[pc].usage_hours || data[pc].total_hours || '-';
                     if (typeof usageHours === 'number') {
-                        usageHours = usageHours.toFixed(2);
+                        usageHours = usageHours.toFixed(4); // โชว์ทศนิยม 4 ตำแหน่งให้เห็นว่าเลขเดินตลอด
                     }
 
                     // สถานะ
@@ -205,7 +220,7 @@
                         `<span class="inline-flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-green-500/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]"><span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>ออนไลน์</span>` :
                         `<span class="inline-flex items-center gap-1.5 bg-gray-500/10 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-500/20"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>ออฟไลน์</span>`;
 
-                    table.innerHTML += `
+                    newHTML += `
                         <tr class="table-row-glass group">
                             <td class="p-5">
                                 <div class="flex items-center gap-3">
@@ -236,17 +251,19 @@
                         </tr>
                     `;
                 }
+                table.innerHTML = newHTML;
+
             } catch (err) {
-                table.innerHTML = \`
+                table.innerHTML = `
                     <tr>
-                        <td colspan="4" class="p-10 text-center text-red-400">
+                        <td colspan="5" class="p-10 text-center text-red-400">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์
                             </div>
                         </td>
                     </tr>
-                \`;
+                `;
             }
         }
     </script>
