@@ -83,13 +83,14 @@
                     <thead>
                         <tr class="bg-black/20 text-xs uppercase tracking-wider text-gray-400">
                             <th class="p-5 font-semibold">ชื่อเครื่อง</th>
-                            <th class="p-5 font-semibold">เวลาที่พบเครื่องล่าสุด</th>
+                            <th class="p-5 font-semibold">เปิดใช้งานครั้งแรก (ของวัน)</th>
+                            <th class="p-5 font-semibold">อัปเดตล่าสุด</th>
                             <th class="p-5 font-semibold">ชั่วโมงการใช้งาน (ชม.)</th>
-                            <th class="p-5 font-semibold">สถานะ</th>
+                            <th class="p-5 font-semibold">สถานะปัจจุบัน</th>
                         </tr>
                     </thead>
                     <tbody id="history-table" class="divide-y divide-white/5">
-                        <tr><td colspan="4" class="p-10 text-center text-gray-500">กรุณาเลือกวันที่ต้องการตรวจสอบ</td></tr>
+                        <tr><td colspan="5" class="p-10 text-center text-gray-500">กรุณาเลือกวันที่ต้องการตรวจสอบ</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -114,83 +115,97 @@
             
             if (!selectedDate) return;
 
-            table.innerHTML = \`
+            table.innerHTML = `
                 <tr>
-                    <td colspan="4" class="p-16 text-center">
+                    <td colspan="5" class="p-16 text-center">
                         <div class="flex flex-col items-center justify-center text-indigo-300">
                             <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-400 mb-4"></div>
                             <span class="text-sm font-medium tracking-wide">กำลังโหลดข้อมูล...</span>
                         </div>
                     </td>
                 </tr>
-            \`;
+            `;
 
             try {
-                const response = await fetch(\`\${BASE_URL}/\${selectedDate}.json\`);
+                const response = await fetch(`${BASE_URL}/${selectedDate}.json`);
                 const data = await response.json();
 
                 if (!data) {
-                    table.innerHTML = \`
+                    table.innerHTML = `
                         <tr>
-                            <td colspan="4" class="p-16 text-center">
+                            <td colspan="5" class="p-16 text-center">
                                 <div class="flex flex-col items-center justify-center text-gray-500">
                                     <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
                                     <span class="text-base">ไม่มีข้อมูลการใช้งานในวันที่เลือก</span>
                                 </div>
                             </td>
                         </tr>
-                    \`;
+                    `;
                     return;
                 }
 
                 table.innerHTML = '';
                 for (let pc in data) {
-                    const time = new Date(data[pc].last_seen).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    const lastSeenTime = new Date(data[pc].last_seen).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
                     
+                    let firstStartupTime = "-";
+                    if (data[pc].first_startup_time) {
+                         firstStartupTime = new Date(data[pc].first_startup_time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    }
+
                     let usageHours = data[pc].usage_hours || data[pc].total_hours || '-';
                     if (typeof usageHours === 'number') {
                         usageHours = usageHours.toFixed(2);
                     }
 
-                    table.innerHTML += \`
+                    // สถานะ
+                    let isOnline = data[pc].status === 'online';
+                    let statusBadge = isOnline ? 
+                        `<span class="inline-flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-green-500/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]"><span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>ออนไลน์</span>` :
+                        `<span class="inline-flex items-center gap-1.5 bg-gray-500/10 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-500/20"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>ออฟไลน์</span>`;
+
+                    table.innerHTML += `
                         <tr class="table-row-glass group">
                             <td class="p-5">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
                                         <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                     </div>
-                                    <span class="font-bold text-gray-200 tracking-wide">\${pc}</span>
+                                    <span class="font-bold text-gray-200 tracking-wide">${pc}</span>
+                                </div>
+                            </td>
+                            <td class="p-5 text-indigo-200 text-sm font-medium">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    ${firstStartupTime} น.
                                 </div>
                             </td>
                             <td class="p-5 text-gray-400 text-sm">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    \${time} น.
+                                    ${lastSeenTime} น.
                                 </div>
                             </td>
                             <td class="p-5">
-                                <span class="text-indigo-300 font-semibold bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">\${usageHours}</span>
+                                <span class="text-indigo-300 font-semibold bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">${usageHours}</span>
                             </td>
                             <td class="p-5">
-                                <span class="inline-flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-green-500/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                                    เคยใช้งาน
-                                </span>
+                                ${statusBadge}
                             </td>
                         </tr>
-                    \`;
+                    `;
                 }
             } catch (err) {
-                table.innerHTML = \`
+                table.innerHTML = `
                     <tr>
-                        <td colspan="4" class="p-10 text-center text-red-400">
+                        <td colspan="5" class="p-10 text-center text-red-400">
                             <div class="flex flex-col items-center gap-2">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์
                             </div>
                         </td>
                     </tr>
-                \`;
+                `;
             }
         }
     </script>

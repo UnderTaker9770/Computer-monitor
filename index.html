@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,57 +13,89 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             min-height: 100vh;
         }
+
         .glass-panel {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
         .card-online {
             background: rgba(34, 197, 94, 0.05);
             border: 1px solid rgba(34, 197, 94, 0.2);
             box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.05), 0 0 15px rgba(34, 197, 94, 0.1);
         }
+
         .card-online:hover {
             box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.1), 0 0 25px rgba(34, 197, 94, 0.2);
             transform: translateY(-5px);
         }
+
         .card-offline {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
         .card-offline:hover {
             transform: translateY(-5px);
             border-color: rgba(255, 255, 255, 0.1);
         }
+
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
+
 <body class="text-white p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
-                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                        </path>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">Live Dashboard</h1>
+                    <h1
+                        class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
+                        Live Dashboard</h1>
                     <p class="text-gray-400 text-sm mt-1">Real-time computer monitoring system</p>
                 </div>
             </div>
-            
-            <a href="history.html" class="group flex items-center gap-2 glass-panel hover:bg-white/10 px-6 py-3 rounded-full transition-all duration-300">
-                <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+
+            <a href="history.html"
+                class="group flex items-center gap-2 glass-panel hover:bg-white/10 px-6 py-3 rounded-full transition-all duration-300">
+                <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-300 transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
                 <span class="font-semibold text-gray-200">View History</span>
             </a>
         </header>
-        
+
         <!-- Dashboard Grid -->
-        <div id="pc-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        <div id="pc-container"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             <!-- Loading State -->
             <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
                 <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400 mb-4"></div>
@@ -79,7 +112,7 @@
                 const response = await fetch(FB_URL);
                 const data = await response.json();
                 const container = document.getElementById('pc-container');
-                
+
                 if (!data) {
                     container.innerHTML = `
                         <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-50">
@@ -96,7 +129,8 @@
                 let pcList = [];
                 for (let pc in data) {
                     const lastSeen = Math.floor(data[pc].last_seen / 1000);
-                    const isOnline = (now - lastSeen) < 180;
+                    // ใช้สถานะจาก Database ถ้าแจ้งว่า offline ให้เป็นเท็จทันที ถ้าไม่แจ้งให้เช็คเวลา < 45 วินาที
+                    const isOnline = (data[pc].status === 'offline') ? false : ((now - lastSeen) < 45);
                     pcList.push({ name: pc, lastSeen: data[pc].last_seen, isOnline: isOnline });
                 }
 
@@ -120,7 +154,7 @@
                     const cardClass = isOnline ? 'card-online' : 'card-offline opacity-60';
                     const indicatorClass = isOnline ? 'bg-green-400 shadow-[0_0_8px_#4ade80] animate-pulse' : 'bg-gray-500';
                     const titleClass = isOnline ? 'text-green-50' : 'text-gray-400';
-                    
+
                     container.innerHTML += `
                         <div class="rounded-2xl p-6 transition-all duration-500 flex flex-col items-center relative overflow-hidden group ${cardClass}">
                             <!-- Decorative background glow -->
@@ -162,8 +196,9 @@
             }
         }
 
-        setInterval(updateDashboard, 5000);
+        setInterval(updateDashboard, 3000);
         updateDashboard();
     </script>
 </body>
+
 </html>
