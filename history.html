@@ -3,93 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สรุปรายงานการใช้งาน</title>
+    <title>ดูประวัติย้อนหลัง</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 p-5 md:p-10 text-slate-800">
-    <div class="max-w-5xl mx-auto bg-white shadow-xl rounded-3xl overflow-hidden">
-        <div class="bg-blue-600 p-8 text-white text-center">
-            <h1 class="text-3xl font-bold">📊 สรุปรายงานการใช้งานคอมพิวเตอร์</h1>
-            <p class="opacity-80 mt-2">อัปเดตข้อมูลแบบ Real-time จากระบบ</p>
-        </div>
-
-        <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+<body class="bg-slate-100 p-5">
+    <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-700">📅 ตรวจสอบประวัติการใช้งานย้อนหลัง</h1>
+        
+        <div class="flex gap-4 mb-8 justify-center items-end">
             <div>
-                <label class="text-sm font-bold text-slate-500">ข้อมูล ณ วันที่:</label>
-                <span id="current-date" class="ml-2 font-mono text-blue-600"></span>
+                <label class="block text-sm font-bold mb-1">เลือกวันที่:</label>
+                <input type="date" id="date-picker" class="border p-2 rounded-lg focus:ring-2 focus:ring-blue-500">
             </div>
-            <a href="index.html" class="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-xl text-sm transition">🏠 กลับหน้าหลัก</a>
+            <button onclick="loadHistoryByDate()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">ดึงข้อมูล</button>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-hidden border rounded-xl">
             <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-slate-800 text-white uppercase text-sm">
+                <thead class="bg-slate-800 text-white">
+                    <tr>
                         <th class="p-4">ชื่อเครื่อง</th>
-                        <th class="p-4">เข้าใช้งานล่าสุด</th>
+                        <th class="p-4">เวลาที่พบเครื่องล่าสุด</th>
                         <th class="p-4">สถานะ</th>
-                        <th class="p-4">หมายเหตุ</th>
                     </tr>
                 </thead>
                 <tbody id="history-table" class="divide-y">
-                    <tr><td colspan="4" class="p-10 text-center opacity-50 italic">กำลังดึงข้อมูลล่าสุด...</td></tr>
+                    <tr><td colspan="3" class="p-10 text-center text-slate-400">กรุณาเลือกวันที่ต้องการตรวจสอบ</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // URL ฐานข้อมูลล่าสุดของคุณ (เช็คให้ชัวร์ว่าสะกดถูก)
-        const FB_URL = "https://my-computer-lap-default-rtdb.asia-southeast1.firebasedatabase.app/computers.json";
+        const BASE_URL = "https://my-computer-lap-default-rtdb.asia-southeast1.firebasedatabase.app/history";
 
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH');
+        // ตั้งค่าให้ปฏิทินเป็นวันปัจจุบันโดยอัตโนมัติ
+        document.getElementById('date-picker').value = new Date().toISOString().split('T')[0];
 
-        async function fetchHistory() {
+        async function loadHistoryByDate() {
+            const selectedDate = document.getElementById('date-picker').value;
+            const table = document.getElementById('history-table');
+            
+            if (!selectedDate) return alert("กรุณาเลือกวันที่");
+
+            table.innerHTML = '<tr><td colspan="3" class="p-10 text-center">กำลังโหลดข้อมูล...</td></tr>';
+
             try {
-                const response = await fetch(FB_URL);
+                const response = await fetch(`${BASE_URL}/${selectedDate}.json`);
                 const data = await response.json();
-                const table = document.getElementById('history-table');
-                table.innerHTML = '';
 
                 if (!data) {
-                    table.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400">ยังไม่มีข้อมูลการใช้งานในระบบ</td></tr>';
+                    table.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-red-500">ไม่มีข้อมูลการใช้งานในวันที่เลือก</td></tr>';
                     return;
                 }
 
-                for (let pcName in data) {
-                    const lastSeenMs = data[pcName].last_seen;
-                    const lastSeenDate = new Date(lastSeenMs);
-                    
-                    // ตรวจสอบว่าออนไลน์อยู่ไหม (ถ้าส่งข้อมูลมาใน 3 นาทีล่าสุด)
-                    const isOnline = (Date.now() - lastSeenMs) < 180000;
-                    
-                    const row = `
-                        <tr class="hover:bg-blue-50 transition">
-                            <td class="p-4 font-bold text-slate-700">${pcName}</td>
-                            <td class="p-4">
-                                <div class="text-sm font-medium text-blue-600">${lastSeenDate.toLocaleTimeString('th-TH')} น.</div>
-                                <div class="text-[10px] text-slate-400">${lastSeenDate.toLocaleDateString('th-TH')}</div>
-                            </td>
-                            <td class="p-4">
-                                ${isOnline 
-                                    ? '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold ring-1 ring-green-600">Online Now</span>' 
-                                    : '<span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">Offline</span>'}
-                            </td>
-                            <td class="p-4 text-xs text-slate-500 italic">
-                                ${isOnline ? 'กำลังเปิดใช้งาน' : 'บันทึกล่าสุดเมื่อ ' + lastSeenDate.toLocaleTimeString('th-TH')}
-                            </td>
+                table.innerHTML = '';
+                for (let pc in data) {
+                    const time = new Date(data[pc].last_seen).toLocaleTimeString('th-TH');
+                    table.innerHTML += `
+                        <tr class="hover:bg-blue-50">
+                            <td class="p-4 font-bold">${pc}</td>
+                            <td class="p-4">${time} น.</td>
+                            <td class="p-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">เคยใช้งาน</span></td>
                         </tr>
                     `;
-                    table.innerHTML += row;
                 }
             } catch (err) {
-                console.error(err);
-                document.getElementById('history-table').innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500">เชื่อมต่อผิดพลาด กรุณาเช็คอินเทอร์เน็ต</td></tr>';
+                table.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-red-500">เกิดข้อผิดพลาดในการดึงข้อมูล</td></tr>';
             }
         }
-
-        fetchHistory();
-        setInterval(fetchHistory, 10000); // อัปเดตทุก 10 วินาที
     </script>
 </body>
 </html>
